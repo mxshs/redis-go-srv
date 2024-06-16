@@ -23,7 +23,7 @@ func (h *Handler) runReplconf(conn net.Conn, cmd *types.Data) ([]byte, error) {
     var result []byte
 
     if h.Info.Role == "slave" {
-        logger.Logger.Info(fmt.Sprintf("%s attempted to sync this replica", conn.LocalAddr()))
+        logger.Logger.Info(fmt.Sprintf("%s attempted to sync this replica", conn.RemoteAddr()))
 
         if conn != h.MasterConn {
             return nil, fmt.Errorf("client connection attempted to replconf a replica")
@@ -39,7 +39,7 @@ func (h *Handler) runReplconf(conn net.Conn, cmd *types.Data) ([]byte, error) {
             ),
         )
     } else {
-        logger.Logger.Info(fmt.Sprintf("replica at %s acknowledged synchronization", conn.LocalAddr()))
+        logger.Logger.Info(fmt.Sprintf("replica at %s acknowledged synchronization", conn.RemoteAddr()))
 
         result = []byte(types.OK)
     }

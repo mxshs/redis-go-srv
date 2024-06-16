@@ -131,7 +131,7 @@ func (h *Handler) handleConnection(conn net.Conn) {
         n, err := conn.Read(rg)
         if err != nil {
             logger.Logger.Debug(
-                fmt.Sprintf("failed to read from connection with %s: %s", conn.LocalAddr(), err.Error()),
+                fmt.Sprintf("failed to read from connection with %s: %s", conn.RemoteAddr(), err.Error()),
             )
             return
         }
@@ -161,7 +161,7 @@ func (h *Handler) handleCommands(conn net.Conn, data []byte) {
 
         commandName := strings.ToLower(args[0].Value.(string))
 
-        logger.Logger.Info(fmt.Sprintf("received %s command from %s", commandName, conn.LocalAddr()))
+        logger.Logger.Info(fmt.Sprintf("received %s command from %s", commandName, conn.RemoteAddr()))
 
 	    worker, ok := h.routes[commandName]
         if !ok {
@@ -179,17 +179,17 @@ func (h *Handler) handleCommands(conn net.Conn, data []byte) {
                 toReplicate, _ := utils.Encode(msg)
 
                 for _, slave := range h.Slaves {
-                    logger.Logger.Info(fmt.Sprintf("propagating %s command to %s", commandName, slave.LocalAddr())) 
+                    logger.Logger.Info(fmt.Sprintf("propagating %s command to %s", commandName, slave.RemoteAddr())) 
 
                     _, err := slave.Write([]byte(*toReplicate))
                     if err != nil {
                         logger.Logger.Warn(
-                            fmt.Sprintf("failed to propagate %s to %s: %s", commandName, slave.LocalAddr(), err.Error()),
+                            fmt.Sprintf("failed to propagate %s to %s: %s", commandName, slave.RemoteAddr(), err.Error()),
                         )
                         continue
                     }
 
-                    logger.Logger.Info(fmt.Sprintf("successfully propagated %s command to %s", commandName, slave.LocalAddr()))
+                    logger.Logger.Info(fmt.Sprintf("successfully propagated %s command to %s", commandName, slave.RemoteAddr()))
                 }
             }()
         }
@@ -198,12 +198,12 @@ func (h *Handler) handleCommands(conn net.Conn, data []byte) {
         _, err := worker.Run(conn, msg)
         if err != nil {
             logger.Logger.Warn(
-                fmt.Sprintf("failed to run command %s from %s: %s", commandName, conn.LocalAddr(), err.Error()),
+                fmt.Sprintf("failed to run command %s from %s: %s", commandName, conn.RemoteAddr(), err.Error()),
             )
             continue
         }
 
-        logger.Logger.Info(fmt.Sprintf("successfully ran %s command from %s", commandName, conn.LocalAddr()))
+        logger.Logger.Info(fmt.Sprintf("successfully ran %s command from %s", commandName, conn.RemoteAddr()))
 
 		if h.Info.Role == "slave" {
 			h.Info.MasterReplOffset += msg.Sz
